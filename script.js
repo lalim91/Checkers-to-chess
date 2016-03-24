@@ -17,7 +17,7 @@ var gameController = function(element){
         for (var i = 0; i < height; i++){
             var tr = $('<tr>');
             for( var j = 0; j < width; j++){
-                var newCell = new cellGenerator(colors[colorIndex]);
+                var newCell = new cellGenerator(colors[colorIndex], {x:i,y:j});
                 colorIndex = 1 - colorIndex;
                 var cellElement = newCell.renderCell();
                 cells.push(newCell);
@@ -30,14 +30,26 @@ var gameController = function(element){
     };
 
 
-    var cellGenerator = function(color){
+
+    var cellGenerator = function(color, position){
         var self = this;
         this.color = color;
+        this.position = position;
+        this.currentPiece = null;
         this.cellElement = null;
         this.renderCell = function (){
             self.cellElement = $('<td>').addClass('cell').css('background-color',this.color);
             return self.cellElement;
-        }
+        };
+        this.cellPosition = function(){
+            return this.position;
+        };
+        this.setCurrentPiece = function(piece){
+            this.currentPiece = piece;
+        };
+        this.getCurrentPiece = function(piece){
+            return this.currentPiece;
+        };
     };
 
     var pieceGenerator = function(){
