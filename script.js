@@ -104,13 +104,18 @@ var gameController = function(element){
         }
     };
 
-    var pieceGenerator = function(){
+    var pieceGenerator = function(moveRule){
         var self = this;
         this.pieceElement = null;
+        this.moveRule = moveRule;
         this.renderPiece = function (){
             self.pieceElement = $('<div>').addClass('piece');
             return self.pieceElement;
+        };
+        this.setMovement = function (){
+            return this.moveRule;
         }
+
     };
 
     var playerGenerator = function (color) {
@@ -165,8 +170,8 @@ var pieceData = [
         },
         movementRules: function(x,y){
             var vectors= [
-                [1,-1],
-                [1, 1]
+                -[1,-1],
+                -[1, 1]
             ];
             var possibles=[];
             for(var i=0; i<vectors.length;i++){
