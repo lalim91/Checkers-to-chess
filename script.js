@@ -51,9 +51,10 @@ var gameController = function(element){
                     result = pieceData[p].placementRule(cells[i]);
                     if (result) {
                         pieceData[p].pieceCount--;
-                        newPiece = new pieceGenerator();
+                        newPiece = new pieceGenerator(pieceData[p].movementRules);
                         pieceElement = newPiece.renderPiece();
                         pieceElement.css('background', this.playerOne.getColor());
+                        newPiece.addCell(cells[i]);
                         pieces.push(newPiece);
                         cells[i].cellElement.append(pieceElement);
                         cells[i].setCurrentPiece(newPiece);
@@ -65,9 +66,10 @@ var gameController = function(element){
                     result = pieceData[p].placementRule(cells[i]);
                     if (result){
                         pieceData[p].pieceCount--;
-                        newPiece = new pieceGenerator();
+                        newPiece = new pieceGenerator(pieceData[p].movementRules);
                         pieceElement = newPiece.renderPiece();
                         pieceElement.css('background',this.playerTwo.getColor());
+                        newPiece.addCell(cells[i]);
                         pieces.push(newPiece);
                         cells[i].cellElement.append(pieceElement);
                         cells[i].setCurrentPiece(newPiece);
@@ -90,9 +92,9 @@ var gameController = function(element){
             self.cellElement = $('<td>').addClass('cell').css('background-color',this.color);
             return self.cellElement;
         };
-        this.cellPosition = function(){
-            return this.position;
-        };
+        //this.cellPosition = function(){
+        //    return this.position;
+        //};
         this.setCurrentPiece = function(piece){
             this.currentPiece = piece;
         };
@@ -101,6 +103,10 @@ var gameController = function(element){
         };
         this.getColor = function (){
             return this.color;
+        };
+        this.highlightNeighbors = function(){
+            self.currentPiece.movementRules(self.position.x,self.position.y);
+
         }
     };
 
@@ -108,13 +114,25 @@ var gameController = function(element){
         var self = this;
         this.pieceElement = null;
         this.moveRule = moveRule;
+        this.cellElement=null;
+        this.addCell= function(the_cell){
+            this.cellElement=the_cell;
+        };
         this.renderPiece = function (){
             self.pieceElement = $('<div>').addClass('piece');
+            self.pieceElement.click(function(){
+                self.clickHandler(this);
+            });
             return self.pieceElement;
         };
         this.setMovement = function (){
             return this.moveRule;
+        };
+        this.clickHandler = function(pieceElement){
+            console.log('I was clicked', pieceElement);
+            this.cellElement.highlightNeighbors();
         }
+
 
     };
 
