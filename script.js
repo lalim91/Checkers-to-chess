@@ -21,7 +21,6 @@ var gameController = function(element){
                 colorIndex = 1 - colorIndex;
                 var cellElement = newCell.renderCell();
                 cells.push(newCell);
-                //cellPosition[i][j] = newCell;
                 tr.append(cellElement);
             }
             this.element.append(tr);
