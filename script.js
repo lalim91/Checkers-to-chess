@@ -5,7 +5,6 @@
 var gameController = function(element){
     var self = this;
     this.element = $(element);
-    var row = [];
     var cells = [];
     var cellPosition =[];
     var pieces = [];
@@ -32,7 +31,7 @@ var gameController = function(element){
             cellPosition.push(newRow);
 
         }
-        console.log(cellPosition);
+        //console.log(cellPosition);
     };
 
     this.initializePlayer =function(colorArray){
@@ -59,7 +58,7 @@ var gameController = function(element){
                         cells[i].cellElement.append(pieceElement);
                         cells[i].setCurrentPiece(newPiece);
                     }
-                    console.log(result);
+                    //console.log(result);
                 }
             }else if (p == 1){
                 for (i = 63; i>0 && pieceData[p].pieceCount > 0; i--){
@@ -74,7 +73,7 @@ var gameController = function(element){
                         cells[i].cellElement.append(pieceElement);
                         cells[i].setCurrentPiece(newPiece);
                     }
-                    console.log(result);
+                    //console.log(result);
                 }
             }
         }
@@ -105,8 +104,9 @@ var gameController = function(element){
             return this.color;
         };
         this.highlightNeighbors = function(){
-            self.currentPiece.movementRules(self.position.x,self.position.y);
-
+            console.log("My move rule: ", this.currentPiece.moveRule(self.position.x,self.position.y));
+            var x = this.currentPiece.moveRule(self.position.x,self.position.y);
+            console.log(x);
         }
     };
 
@@ -188,20 +188,25 @@ var pieceData = [
         },
         movementRules: function(x,y){
             var vectors= [
-                -[1,-1],
-                -[1, 1]
+                [-1,1],
+                [-1, -1]
             ];
-            var possibles=[];
+            var totalPossible=[];
+            var validPossible=[];
             for(var i=0; i<vectors.length;i++){
-                for(var j=1;j<=vectors[i][2];j++){
+                for(var j=1;j<vectors[i].length;j++){
                     var possible_coord = {
                         x:x+(vectors[i][0]*j),
                         y:y+(vectors[i][1]*j)
                     };
-                    possibles.push(possible_coord);
+                    totalPossible.push(possible_coord);
+                    if (totalPossible[i].x < 8 && totalPossible[i].x >= 0 && totalPossible[i].y < 8 && totalPossible[i].y >=0){
+                        validPossible.push(totalPossible[i]);
+                    }
+
                 }
             }
-            return possibles;
+            return validPossible;
         }
     }
 ];
