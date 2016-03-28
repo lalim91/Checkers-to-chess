@@ -34,6 +34,10 @@ var gameController = function(element){
         //console.log(cellPosition);
     };
 
+    this.getCellByPosition = function (){
+        var pCell = cellPosition[]
+    };
+
     this.initializePlayer =function(colorArray){
         this.playerOne = new playerGenerator(colorArray[0]);
         this.playerTwo = new playerGenerator(colorArray[1]);
@@ -91,9 +95,9 @@ var gameController = function(element){
             self.cellElement = $('<td>').addClass('cell').css('background-color',this.color);
             return self.cellElement;
         };
-        //this.cellPosition = function(){
-        //    return this.position;
-        //};
+        this.cellPosition = function(){
+            return this.position;
+        };
         this.setCurrentPiece = function(piece){
             this.currentPiece = piece;
         };
@@ -107,7 +111,9 @@ var gameController = function(element){
             console.log("My move rule: ", this.currentPiece.moveRule(self.position.x,self.position.y));
             var x = this.currentPiece.moveRule(self.position.x,self.position.y);
             console.log(x);
-        }
+        };
+
+
     };
 
     var pieceGenerator = function(moveRule){
@@ -125,9 +131,6 @@ var gameController = function(element){
             });
             return self.pieceElement;
         };
-        this.setMovement = function (){
-            return this.moveRule;
-        };
         this.clickHandler = function(pieceElement){
             console.log('I was clicked', pieceElement);
             this.cellElement.highlightNeighbors();
@@ -137,10 +140,8 @@ var gameController = function(element){
     };
 
     var playerGenerator = function (color) {
-        var self = this;
         this.color = color;
         this.getColor = function () {
-            //this.pieceElement.css('background-color',this.color);
             return this.color;
         }
     };
@@ -157,23 +158,28 @@ var pieceData = [
                 return false;
             }
         },
-            movementRules: function(x,y){
-                var vectors= [
-                    [1,-1],
-                    [1, 1]
-                ];
-                var possibles=[];
-                for(var i=0; i<vectors.length;i++){
-                    for(var j=1;j<vectors[i].length;j++){
-                        var possible_coord = {
-                            x:x+(vectors[i][0]*j),
-                            y:y+(vectors[i][1]*j)
-                        };
-                        possibles.push(possible_coord);
+        movementRules: function(x,y){
+            var vectors= [
+                [1,-1],
+                [1, 1]
+            ];
+            var totalPossible=[];
+            var validPossible=[];
+            for(var i=0; i<vectors.length;i++){
+                for(var j=1;j<vectors[i].length;j++){
+                    var possible_coord = {
+                        x:x+(vectors[i][0]*j),
+                        y:y+(vectors[i][1]*j)
+                    };
+                    totalPossible.push(possible_coord);
+                    if (totalPossible[i].x < 8 && totalPossible[i].x >= 0 && totalPossible[i].y < 8 && totalPossible[i].y >=0){
+                        validPossible.push(totalPossible[i]);
                     }
+
                 }
-                return possibles;
             }
+            return validPossible;
+        }
     },
     {
         pieceClass: 'piece',
