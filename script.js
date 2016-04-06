@@ -35,7 +35,7 @@ var gameController = function(element){
     };
 
     this.getCellByPosition = function (){
-        var pCell = cellPosition[]
+        var pCell = cellPosition[i];
     };
 
     this.initializePlayer =function(colorArray){
