@@ -1,0 +1,15 @@
+#board{
+    height:100vh;
+}
+.cell{
+    height: 8vw;
+    width:8vw;
+    border: 1px solid black;
+}
+.piece {
+    height: 6vw;
+    width:6vw;
+    border: 1px solid black;
+    border-radius: 100%;
+    /*background-color: yellow;*/
+}
