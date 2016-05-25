@@ -1,3 +1,4 @@
+
 var gameController = function (element){
     var self = this;
     self.element = $(element);
@@ -82,48 +83,16 @@ var gameController = function (element){
 
 var pieceData = [
     {
-        pieceClass:"piece",
+        pieceClass: "piece",
         pieceCount: 12,
-        placementRule:function(cell){
-            if (cell.getColor() == 'black'){
+        placementRule: function (cell) {
+            if (cell.getColor() == 'black') {
                 return true;
-            }else{
+            } else {
                 return false;
             }
         },
-        movementRules:function(x,y){
-            var vectors = [
-                [1,-1],
-                [1,1]
-            ];
-            var totalPossible = [];
-            var validPossible = [];
-            for(var i = 0;i < vectors.length;i++){
-                for(var j = 1;j < vectors[i].length;j++){
-                    var possibleCoor = {
-                        x:x+(vectors[i][0]*j),
-                        y:y+(vectors[i][1]*j)
-                    };
-                    totalPossible.push(possibleCoor);
-                    if (totalPossible[i].x < 8 && totalPossible[i].x >= 0 && totalPossible[i].y < 8 && totalPossible[i].y >=0){
-                        validPossible.push(totalPossible[i]);
-                    }
-                }
-            }
-            return validPossible;
-        }
-    },
-    {
-        pieceClass:"piece",
-        pieceCount: 12,
-        placementRule:function(cell){
-            if (cell.getColor() == 'black'){
-                return true;
-            }else{
-                return false;
-            }
-        },
-        movementRules:function(x,y) {
+        movementRules: function (x, y) {
             var vectors = [
                 [1, -1],
                 [1, 1]
@@ -140,15 +109,14 @@ var pieceData = [
                     if (totalPossible[i].x < 8 && totalPossible[i].x >= 0 && totalPossible[i].y < 8 && totalPossible[i].y >= 0) {
                         validPossible.push(totalPossible[i]);
                     }
+
+
+                    return validPossible;
                 }
             }
-            return validPossible;
         }
-    }
+    },
+    {
 
-];
-var game;
-$(document).ready(function(){
-    game = new gameController('#board');
-    game.createBoard(8,8);
-});
+    }
+]
