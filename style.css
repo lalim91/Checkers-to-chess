@@ -2,7 +2,7 @@
     height:100vh;
 }
 .cell{
-    height: 8vw;
+    height: 6vw;
     width:8vw;
     border: 1px solid black;
 }
