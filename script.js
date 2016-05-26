@@ -25,6 +25,47 @@ var gameController = function (element){
         cellPosition.push(newRow);
         }
     };
+    self.getCellByPosition = function(){
+        var CellByPosition = CellPosition[i];
+    };
+    self.initialPlayer = function(colorArray){
+        self.playerOne = new playerGenerator(colorArray[0]);
+        self.playerTwo = new playerGenerator(colorArray[1]);
+    };
+    self.createPiece = function(){
+        var newPiece = null;
+        var pieceElement = null;
+        var result = null;
+        for (var p = 0; p < pieceData.length; p++){
+            if (p == 0){
+                for (var i = 0; i < cells.length && pieceData[p].pieceCount > 0; i++){
+                    result = pieceData[p].placementRule(cells[i]);
+                    if(result){
+                        pieceData[p].pieceCount--;
+                        newPiece = new pieceGenerator(pieceData[p].movementRules);
+                        pieceElement = newPiece.renderPiece();
+                        pieceElement.css('background', self.playerOne.getColor());
+                        newPiece.setCurrentCell(cells[i]);
+                        cells[i].cellElement.append(pieceElement);
+                        cells[i].setCurrentPiece(newPiece);
+                    }
+                }
+            }else if (p == 1){
+                for (i = 63; i > 0 && pieceData[p].pieceCount > 0; i--){
+                    result = pieceData[p].placementRule(cells[i]);
+                    if(result){
+                        pieceData[p].pieceCount--;
+                        newPiece = new pieceGenerator(pieceData[p].movementRules);
+                        pieceElement = newPiece.renderPiece();
+                        pieceElement.css('background', self.playerTwo.getColor());
+                        newPiece.setCurrentCell(cells[i]);
+                        cells[i].cellElement.append(pieceElement);
+                        cells[i].setCurrentPiece(newPiece);
+                    }
+                }
+            }
+        }
+    };
 
     var cellGenerator = function(color, position){
         var cellSelf = this;
@@ -125,8 +166,8 @@ var pieceData = [
         },
         movementRules:function(x,y) {
             var vectors = [
-                [1, -1],
-                [1, 1]
+                [-1, 1],
+                [-1, -1]
             ];
             var totalPossible = [];
             var validPossible = [];
@@ -151,4 +192,6 @@ var game;
 $(document).ready(function(){
     game = new gameController('#board');
     game.createBoard(8,8);
+    game.initialPlayer(['yellow','blue']);
+    game.createPiece(pieceData);
 });
