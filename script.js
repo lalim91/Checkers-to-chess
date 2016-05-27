@@ -5,6 +5,7 @@ var gameController = function (element){
     var cells = [];
     var cellPosition = [];
     var pieces = [];
+    var highlightedCells = [];
 
     self.createBoard = function(height,width){
         var colors = ['black','white'];
@@ -25,9 +26,10 @@ var gameController = function (element){
         colorIndex = 1 - colorIndex;
         cellPosition.push(newRow);
         }
+        console.log(cellPosition);
     };
     self.getCellByPosition = function(){
-        var CellByPosition = CellPosition[i];
+        var CellByPosition = cellPosition[i];
     };
     self.initialPlayer = function(colorArray){
         self.playerOne = new playerGenerator(colorArray[0]);
@@ -47,6 +49,7 @@ var gameController = function (element){
                         pieceElement = newPiece.renderPiece();
                         pieceElement.css('background', self.playerOne.getColor());
                         newPiece.setCurrentCell(cells[i]);
+                        pieces.push(newPiece);
                         cells[i].cellElement.append(pieceElement);
                         cells[i].setCurrentPiece(newPiece);
                     }
@@ -60,6 +63,7 @@ var gameController = function (element){
                         pieceElement = newPiece.renderPiece();
                         pieceElement.css('background', self.playerTwo.getColor());
                         newPiece.setCurrentCell(cells[i]);
+                        pieces.push(newPiece);
                         cells[i].cellElement.append(pieceElement);
                         cells[i].setCurrentPiece(newPiece);
                     }
@@ -67,6 +71,7 @@ var gameController = function (element){
             }
         }
     };
+
 
     var cellGenerator = function(color, position){
         var cellSelf = this;
@@ -84,21 +89,54 @@ var gameController = function (element){
         cellSelf.setCurrentPiece = function(piece){
             cellSelf.currentPiece = piece;
         };
-        cellSelf.getCurrentPiece = function(piece){
+        cellSelf.getCurrentPiece = function(){
             return cellSelf.currentPiece;
         };
         cellSelf.getColor = function(){
             return cellSelf.color;
+        };
+        cellSelf.indicateMovesWithHighlight = function(){
+          cellSelf.cellElement.addClass('highlight');
+        };
+        cellSelf.removeHighlight = function(){
+            cellSelf.cellElement.removeClass('highlight');
+        };
+        cellSelf.findPossibleMoves = function(){
+            highlightedCells = [];
+            console.log("My move rule: ",
+            cellSelf.currentPiece.moveRule(cellSelf.position.x,cellSelf.position.y));
+            cellSelf.moves = cellSelf.currentPiece.moveRule(cellSelf.position.x,cellSelf.position.y);
+            cellSelf.checkCellForPiece();
+            cellSelf.highlightPossibleMoves();
+
+        };
+        cellSelf.checkCellForPiece = function(){
+            for (var i = 0; i < cellSelf.moves.length; i++){
+                console.log(cellSelf.moves[i]);
+                if (cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y].currentPiece == null){
+                    highlightedCells.push(cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y]);
+                }
+            }
+            return highlightedCells;
+        };
+        cellSelf.highlightPossibleMoves = function(){
+            for(var i = 0; i < highlightedCells.length; i++){
+                highlightedCells[i].indicateMovesWithHighlight();            }
+        };
+        cellSelf.removeHighlightedMoves= function(){
+            for(var i = 0; i < highlightedCells.length; i++){
+                highlightedCells[i].removeHighlight();            }
         }
     };
 
     var pieceGenerator = function(moveRule){
         var pieceSelf = this;
+        pieceSelf.checked = false;
         pieceSelf.pieceElement = null;
         pieceSelf.moveRule = moveRule;
         pieceSelf.cellElement = null;
         pieceSelf.setCurrentCell = function(cell){
-            pieceSelf.pieceElement = cell;
+            pieceSelf.cellElement = cell;
         };
         pieceSelf.renderPiece = function(){
             pieceSelf.pieceElement = $('<div>').addClass('piece');
@@ -108,7 +146,13 @@ var gameController = function (element){
             return pieceSelf.pieceElement;
         };
         pieceSelf.clickHandler = function(pieceElement){
+            pieceSelf.checked = true;
             console.log("I was clicked", pieceElement);
+            if (pieceSelf.checked === true){
+                pieceSelf.cellElement.removeHighlightedMoves();
+                pieceSelf.cellElement.findPossibleMoves();
+            }
+
         }
     };
 
@@ -150,11 +194,9 @@ var pieceData = [
                     if (totalPossible[i].x < 8 && totalPossible[i].x >= 0 && totalPossible[i].y < 8 && totalPossible[i].y >= 0) {
                         validPossible.push(totalPossible[i]);
                     }
-
-
-                    return validPossible;
                 }
             }
+            return validPossible;
         }
     },
     {
@@ -184,11 +226,9 @@ var pieceData = [
                     if (totalPossible[i].x < 8 && totalPossible[i].x >= 0 && totalPossible[i].y < 8 && totalPossible[i].y >= 0) {
                         validPossible.push(totalPossible[i]);
                     }
-
-
-                    return validPossible;
                 }
             }
+            return validPossible;
         }
     }
 
