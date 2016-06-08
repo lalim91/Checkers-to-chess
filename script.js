@@ -132,19 +132,22 @@ var gameController = function (element){
             return cellSelf.color;
         };
         cellSelf.indicateMovesWithHighlight = function(){
-          cellSelf.cellElement.addClass('highlight');
+            cellSelf.cellElement.addClass('highlight');
+
+
         };
         cellSelf.removeHighlight = function(){
             cellSelf.cellElement.removeClass('highlight');
         };
         cellSelf.findPossibleMoves = function(event, ui){
-            cellSelf.removeHighlightedMoves();
+            //cellSelf.removeHighlightedMoves();
             highlightedCells = [];
             console.log("My move rule: ",
             cellSelf.currentPiece.moveRule(cellSelf.position.x,cellSelf.position.y));
             cellSelf.moves = cellSelf.currentPiece.moveRule(cellSelf.position.x,cellSelf.position.y);
             cellSelf.checkCellForPiece();
             cellSelf.highlightPossibleMoves();
+            cellSelf.drop();
 
         };
         cellSelf.checkCellForPiece = function(){
@@ -159,15 +162,15 @@ var gameController = function (element){
         cellSelf.highlightPossibleMoves = function(){
             for(var i = 0; i < highlightedCells.length; i++){
                 highlightedCells[i].indicateMovesWithHighlight();
-                highlightedCells[i].drop();
+                console.log('cells receive drop');
             }
         };
+
         cellSelf.removeHighlightedMoves= function(){
             for(var i = 0; i < highlightedCells.length; i++){
                 highlightedCells[i].removeHighlight();            }
         };
         cellSelf.drop = function(){
-            console.log('drop function called');
             $('.highlight').droppable({
                 accept:pieceGenerator.pieceElement,
                 hoverClass:'hovered',
@@ -176,17 +179,16 @@ var gameController = function (element){
 
         };
         cellSelf.removeDrop = function(event, ui){
-            console.log('remove drop attempt');
             $('.highlight').droppable('destroy');
-            console.log('after drop destroy before remove highlight');
             $('.highlight').removeClass('highlight');
         };
 
         cellSelf.updateCells = function(event, ui){
             //cellSelf.removeCurrentPiece();
             //ui.draggable.removeCurrentCell();
-            //cellSelf.removeDrop();
-            $('.highlight.hovered').append(cellSelf.pieceElement.draggable);
+            cellSelf.removeDrop();
+            $('.highlight').append(ui.draggable);
+            $('#draggableHelper').remove();
         }
     };
 
@@ -226,10 +228,15 @@ var gameController = function (element){
                 containment:'#board',
                 revert:"invalid",
                 tolerance:'fit',
-                start:pieceSelf.cellElement.findPossibleMoves
-                //stop:pieceSelf.cellElement.removeDrop
+                start:pieceSelf.cellElement.findPossibleMoves,
+                stop:pieceSelf.cellElement.removeDrop,
+                //helper:pieceSelf.help
             });
         };
+
+        //pieceSelf.help = function(event){
+        //    return '<div id="draggableHelper" class="piece"></div>';
+        //}
     };
 
     var playerGenerator = function(color){

@@ -26,3 +26,7 @@
 .highlight.hovered{
     background-color:darkseagreen;
 }
+#draggableHelper {
+    opacity: .7;
+    background: orange;
+}
