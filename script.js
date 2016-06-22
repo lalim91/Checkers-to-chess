@@ -5,6 +5,7 @@ var gameController = function (element){
     var locked = false;
     var turn = null;
     var cells = [];
+    this.cells = cells;
     var cellPosition = [];
     var pieces = [];
     var players = [];
@@ -12,6 +13,7 @@ var gameController = function (element){
     var player1Pieces = [];
     var player2Pieces = [];
     var highlightedCells = [];
+    self.currentlyDraggingPiece = null;
 
     self.createBoard = function(height,width){
         var colors = ['black','white'];
@@ -20,7 +22,7 @@ var gameController = function (element){
             var tr = $('<tr>');
             var newRow = [];
             for (var j = 0; j < width; j++){
-                var newCell = new cellGenerator(colors[colorIndex],{x:i,y:j});
+                var newCell = new cellGenerator(colors[colorIndex],{x:i,y:j},self);
                 colorIndex = 1 - colorIndex;
                 var cell = newCell.renderCell();
                 cells.push(newCell);
@@ -52,7 +54,7 @@ var gameController = function (element){
                     result = pieceData[p].placementRule(cells[i]);
                     if(result){
                         pieceData[p].pieceCount--;
-                        newPiece = new pieceGenerator(pieceData[p].movementRules);
+                        newPiece = new pieceGenerator(pieceData[p].movementRules,self);
                         pieceElement = newPiece.renderPiece();
                         pieceElement.css('background', self.playerOne.getColor());
                         newPiece.setCurrentCell(cells[i]);
@@ -69,7 +71,7 @@ var gameController = function (element){
                     result = pieceData[p].placementRule(cells[i]);
                     if(result){
                         pieceData[p].pieceCount--;
-                        newPiece = new pieceGenerator(pieceData[p].movementRules);
+                        newPiece = new pieceGenerator(pieceData[p].movementRules,self);
                         pieceElement = newPiece.renderPiece();
                         pieceElement.css('background', self.playerTwo.getColor());
                         newPiece.setCurrentCell(cells[i]);
@@ -97,17 +99,31 @@ var gameController = function (element){
             currentPlayer = 0;
         }
     };
-    var cellGenerator = function(color, position){
+    self.dragTracker = function(piece){
+        //if(pieceSelf.checked == true){
+        self.currentlyDraggingPiece = piece;
+        console.log(self.currentlyDraggingPiece);
+        //self.currentlyDraggingPiece.cellElement.removeCurrentPiece();
+        //self.currentlyDraggingPiece.removeCurrentCell();
+
+
+
+    };
+    var cellGenerator = function(color, position,game){
         var cellSelf = this;
         cellSelf.color = color;
         cellSelf.position = position;
+        cellSelf.game = game;
         cellSelf.currentPiece = null;
         cellSelf.cellElement = null;
+
+
         cellSelf.renderCell = function() {
-            cellSelf.cellElement = $('<td>').addClass('cell');
+            cellSelf.cellElement = $('<td row="' + cellSelf.position.x + '" col="' + cellSelf.position.y + '">').addClass('cell');
             cellSelf.setBackgroundColor();
             return cellSelf.cellElement;
         };
+
         cellSelf.setBackgroundColor = function(){
             if (cellSelf.color == "black"){
                 cellSelf.cellElement.addClass('black');
@@ -133,14 +149,17 @@ var gameController = function (element){
         };
         cellSelf.indicateMovesWithHighlight = function(){
             cellSelf.cellElement.addClass('highlight');
-
-
+        };
+        cellSelf.addTarget = function(){
+            cellSelf.cellElement.addClass('target');
         };
         cellSelf.removeHighlight = function(){
             cellSelf.cellElement.removeClass('highlight');
         };
         cellSelf.findPossibleMoves = function(event, ui){
-            //cellSelf.removeHighlightedMoves();
+            //cellSelf.currentPiece.checked = true;
+            //console.log(cellSelf.currentPiece.checked);
+            //cellSelf.currentPiece.dragTracker();
             highlightedCells = [];
             console.log("My move rule: ",
             cellSelf.currentPiece.moveRule(cellSelf.position.x,cellSelf.position.y));
@@ -174,30 +193,42 @@ var gameController = function (element){
             $('.highlight').droppable({
                 accept:pieceGenerator.pieceElement,
                 hoverClass:'hovered',
-                drop:cellSelf.updateCells
+                drop:function(event, ui){
+                    cellSelf.updateCells(event,ui);
+
+                }
             });
 
         };
         cellSelf.removeDrop = function(event, ui){
             $('.highlight').droppable('destroy');
             $('.highlight').removeClass('highlight');
+            //cellSelf.currentPiece.checked = false;
+            //console.log(cellSelf.currentPiece.checked);
         };
 
         cellSelf.updateCells = function(event, ui){
-            //cellSelf.removeCurrentPiece();
-            //ui.draggable.removeCurrentCell();
+            for(var i = 0; i < highlightedCells.length; i++){
+                if (highlightedCells[i].cellElement){
+                    highlightedCells[i].addTarget();
+                }
+
+
+            }
+
+            cellSelf.game.dragTracker(ui.draggable[0]);
             cellSelf.removeDrop();
             $('.highlight').append(ui.draggable);
-            $('#draggableHelper').remove();
+            console.log($('.highlight'));
         }
     };
 
-    var pieceGenerator = function(moveRule){
+    var pieceGenerator = function(moveRule,game){
         var pieceSelf = this;
-        //pieceSelf.class = "ui-widget-content";
         pieceSelf.checked = false;
         pieceSelf.pieceElement = null;
         pieceSelf.moveRule = moveRule;
+        pieceSelf.game = game;
         pieceSelf.cellElement = null;
         pieceSelf.player = null;
         pieceSelf.setPlayer = function(player){
@@ -206,37 +237,38 @@ var gameController = function (element){
         pieceSelf.setCurrentCell = function(cell){
             pieceSelf.cellElement = cell;
         };
-        //pieceSelf.removeCurrentCell = function(){
-        //    pieceSelf.cellElement = null;
-        //};
+        pieceSelf.removeCurrentCell = function(){
+            pieceSelf.cellElement = null;
+        };
         pieceSelf.renderPiece = function(){
             pieceSelf.pieceElement = $('<div>').addClass('piece');
             return pieceSelf.pieceElement;
         };
-        //pieceSelf.clickHandler = function(pieceElement){
-        //    console.log("I was clicked", pieceElement);
-        //    pieceSelf.cellElement.removeHighlightedMoves();
-        //    pieceSelf.cellElement.findPossibleMoves();
-        //    if (pieceSelf.checked == true){
-        //        pieceSelf.drag();
-        //        //pieceSelf.dropSpot();
-        //        pieceSelf.cellElement.drop();
-        //    }
-        //};
         pieceSelf.drag = function(){
             pieceSelf.pieceElement.draggable({
                 containment:'#board',
                 revert:"invalid",
                 tolerance:'fit',
                 start:pieceSelf.cellElement.findPossibleMoves,
-                stop:pieceSelf.cellElement.removeDrop,
+                stop:pieceSelf.cellElement.removeDrop
                 //helper:pieceSelf.help
             });
         };
-
-        //pieceSelf.help = function(event){
-        //    return '<div id="draggableHelper" class="piece"></div>';
+        //pieceSelf.dragTracker = function(){
+        //    //if(pieceSelf.checked == true){
+        //        pieceSelf.game.currentlyDraggingPiece = pieceSelf;
+        //        console.log(pieceSelf.game.currentlyDraggingPiece);
+        //        pieceSelf.game.currentlyDraggingPiece.cellElement.removeCurrentPiece();
+        //        pieceSelf.game.currentlyDraggingPiece.removeCurrentCell();
+        //
+        //
+        //
+        //    };
+            //else if (pieceSelf.checked == false){
+            //    pieceSelf.game.currentlyDraggingPiece = null;
+            //}
         //}
+
     };
 
     var playerGenerator = function(color){
