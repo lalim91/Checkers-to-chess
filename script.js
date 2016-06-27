@@ -91,12 +91,12 @@ var gameController = function (element){
     };
     self.setTurns = function(){
         if (currentPlayer == 0){
-            turn = players[0];
+            //turn = players[0];
             players[1].disablePieces(player2Pieces);
             players[0].enablePieces(player1Pieces);
             currentPlayer = 1;
         }else if (currentPlayer == 1){
-            turn = players[1];
+            //turn = players[1];
             players[0].disablePieces(player1Pieces);
             players[1].enablePieces(player2Pieces);
             currentPlayer = 0;
@@ -147,10 +147,14 @@ var gameController = function (element){
         self.removeDrop();
         self.newCell.setCurrentPiece(self.currentlyDraggingPiece);
         self.currentlyDraggingPiece.setCurrentCell(self.newCell);
+        $(self.newCell.cellElement).append(ui.draggable);
+        $('#draggableHelper').remove();
         console.log('current dragged piece: ',self.currentlyDraggingPiece);
         console.log('oldCell: ',self.oldCell);
         console.log('newCell: ',self.newCell);
         //console.log('cells:', self.cells);
+        self.setTurns();
+
 
 
     };
@@ -200,9 +204,6 @@ var gameController = function (element){
         cellSelf.indicateMovesWithHighlight = function(){
             cellSelf.cellElement.addClass('highlight');
         };
-        cellSelf.addTarget = function(){
-            cellSelf.cellElement.addClass('target');
-        };
         cellSelf.removeHighlight = function(){
             cellSelf.cellElement.removeClass('highlight');
         };
@@ -223,6 +224,8 @@ var gameController = function (element){
                 console.log(cellSelf.moves[i]);
                 if (cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y].currentPiece == null){
                     highlightedCells.push(cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y]);
+                }else if(cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y].currentPiece.player != cellSelf.currentPiece.player){
+                    console.log('not match');
                 }
             }
             return highlightedCells;
@@ -249,19 +252,6 @@ var gameController = function (element){
             });
 
         };
-        //cellSelf.removeDrop = function(event, ui){
-        //    $('.highlight').droppable('destroy');
-        //    $('.highlight').removeClass('highlight');
-        //    //cellSelf.currentPiece.checked = false;
-        //    //console.log(cellSelf.currentPiece.checked);
-        //};
-
-    //    cellSelf.updateCells = function(event, ui){
-    //        console.log($(ui.draggable).attr('id'));
-    //        cellSelf.removeDrop();
-    //        $('.highlight').append(ui.draggable);
-    //        console.log($('.highlight'));
-    //    }
     };
 
     var pieceGenerator = function(moveRule,game,id){
@@ -301,24 +291,13 @@ var gameController = function (element){
                 start:function(){
                     pieceSelf.cellElement.findPossibleMoves();
                 },
-                stop:pieceSelf.game.removeDrop
-                //helper:pieceSelf.help
+                stop:pieceSelf.game.removeDrop,
+                helper:pieceSelf.help
             });
         };
-        //pieceSelf.dragTracker = function(){
-        //    //if(pieceSelf.checked == true){
-        //        pieceSelf.game.currentlyDraggingPiece = pieceSelf;
-        //        console.log(pieceSelf.game.currentlyDraggingPiece);
-        //        pieceSelf.game.currentlyDraggingPiece.cellElement.removeCurrentPiece();
-        //        pieceSelf.game.currentlyDraggingPiece.removeCurrentCell();
-        //
-        //
-        //
-        //    };
-            //else if (pieceSelf.checked == false){
-            //    pieceSelf.game.currentlyDraggingPiece = null;
-            //}
-        //}
+        pieceSelf.help = function (){
+            return '<div id="draggableHelper" class="piece"></div>';
+        }
 
     };
 
@@ -415,6 +394,6 @@ $(document).ready(function(){
     game.createBoard(8,8);
     game.initialPlayer(['yellow','blue']);
     game.createPiece(pieceData);
-    //game.setTurns();
+    game.setTurns();
 });
 
