@@ -8,12 +8,15 @@ var gameController = function (element){
     this.cells = cells;
     var cellPosition = [];
     var pieces = [];
+    self.pieces = pieces;
     var players = [];
     var currentPlayer = 0;
     var player1Pieces = [];
     var player2Pieces = [];
     var highlightedCells = [];
     self.currentlyDraggingPiece = null;
+    self.oldCell = null;
+    self.newCell = null;
 
     self.createBoard = function(height,width){
         var colors = ['black','white'];
@@ -54,7 +57,7 @@ var gameController = function (element){
                     result = pieceData[p].placementRule(cells[i]);
                     if(result){
                         pieceData[p].pieceCount--;
-                        newPiece = new pieceGenerator(pieceData[p].movementRules,self);
+                        newPiece = new pieceGenerator(pieceData[p].movementRules,self,i);
                         pieceElement = newPiece.renderPiece();
                         pieceElement.css('background', self.playerOne.getColor());
                         newPiece.setCurrentCell(cells[i]);
@@ -71,7 +74,7 @@ var gameController = function (element){
                     result = pieceData[p].placementRule(cells[i]);
                     if(result){
                         pieceData[p].pieceCount--;
-                        newPiece = new pieceGenerator(pieceData[p].movementRules,self);
+                        newPiece = new pieceGenerator(pieceData[p].movementRules,self,i);
                         pieceElement = newPiece.renderPiece();
                         pieceElement.css('background', self.playerTwo.getColor());
                         newPiece.setCurrentCell(cells[i]);
@@ -99,13 +102,55 @@ var gameController = function (element){
             currentPlayer = 0;
         }
     };
-    self.dragTracker = function(piece){
-        //if(pieceSelf.checked == true){
-        self.currentlyDraggingPiece = piece;
-        console.log(self.currentlyDraggingPiece);
-        //self.currentlyDraggingPiece.cellElement.removeCurrentPiece();
-        //self.currentlyDraggingPiece.removeCurrentCell();
+    self.dragTracker = function(piece, id){
+        for (var i = 0; i < pieces.length; i++){
+            if (pieces[i].id == id){
+                self.currentlyDraggingPiece = pieces[i];
+                //console.log('current dragged piece: ',self.currentlyDraggingPiece);
+            }
+        }
+        self.oldCell = self.currentlyDraggingPiece.cellElement;
+        self.oldCell.removeCurrentPiece();
+        self.currentlyDraggingPiece.removeCurrentCell();
+        //console.log('oldCell: ',self.oldCell);
+    };
+    self.dropTracker = function(cell, row, col){
+        for (var i = 0; i < cells.length; i++){
+            if (cells[i].row == row && cells[i].col == col){
+                self.newCell = cells[i];
+                //console.log('newCell: ',self.newCell);
+            }
+        }
 
+    };
+    self.removeDrop = function(event, ui){
+        $('.highlight').droppable('destroy');
+        $('.highlight').removeClass('highlight');
+        //cellSelf.currentPiece.checked = false;
+        //console.log(cellSelf.currentPiece.checked);
+    };
+    self.refresh = function(){
+        self.currentlyDraggingPiece = null;
+        self.oldCell = null;
+        self.newCell = null;
+    };
+    self.updateCells = function(event, ui){
+        self.refresh();
+        console.log('ui draggable: ',$(ui.draggable).attr('id'));
+        var id = $(ui.draggable).attr('id');
+        self.dragTracker(ui.draggable, id);
+        console.log('event Target Row: ',$(event.target).attr('row'));
+        console.log('event Target Col: ',$(event.target).attr('col'));
+        var row = $(event.target).attr('row');
+        var col = $(event.target).attr('col');
+        self.dropTracker(event.target, row, col);
+        self.removeDrop();
+        self.newCell.setCurrentPiece(self.currentlyDraggingPiece);
+        self.currentlyDraggingPiece.setCurrentCell(self.newCell);
+        console.log('current dragged piece: ',self.currentlyDraggingPiece);
+        console.log('oldCell: ',self.oldCell);
+        console.log('newCell: ',self.newCell);
+        //console.log('cells:', self.cells);
 
 
     };
@@ -116,10 +161,12 @@ var gameController = function (element){
         cellSelf.game = game;
         cellSelf.currentPiece = null;
         cellSelf.cellElement = null;
-
+        cellSelf.row = cellSelf.position.x;
+        cellSelf.col = cellSelf.position.y;
+        cellSelf.currentPieceId = null;
 
         cellSelf.renderCell = function() {
-            cellSelf.cellElement = $('<td row="' + cellSelf.position.x + '" col="' + cellSelf.position.y + '">').addClass('cell');
+            cellSelf.cellElement = $('<td row="' + cellSelf.row + '" col="' + cellSelf.col + '">').addClass('cell');
             cellSelf.setBackgroundColor();
             return cellSelf.cellElement;
         };
@@ -137,12 +184,15 @@ var gameController = function (element){
         };
         cellSelf.setCurrentPiece = function(piece){
             cellSelf.currentPiece = piece;
+            cellSelf.currentPieceId = piece.id;
         };
         cellSelf.getCurrentPiece = function(){
             return cellSelf.currentPiece;
         };
         cellSelf.removeCurrentPiece = function(){
             cellSelf.currentPiece = null;
+            cellSelf.currentPieceId = null;
+            //cellSelf.moves = null;
         };
         cellSelf.getColor = function(){
             return cellSelf.color;
@@ -157,10 +207,9 @@ var gameController = function (element){
             cellSelf.cellElement.removeClass('highlight');
         };
         cellSelf.findPossibleMoves = function(event, ui){
-            //cellSelf.currentPiece.checked = true;
-            //console.log(cellSelf.currentPiece.checked);
-            //cellSelf.currentPiece.dragTracker();
             highlightedCells = [];
+            //cellSelf.game.refresh();
+            console.log('current piece', cellSelf.currentPiece);
             console.log("My move rule: ",
             cellSelf.currentPiece.moveRule(cellSelf.position.x,cellSelf.position.y));
             cellSelf.moves = cellSelf.currentPiece.moveRule(cellSelf.position.x,cellSelf.position.y);
@@ -194,54 +243,54 @@ var gameController = function (element){
                 accept:pieceGenerator.pieceElement,
                 hoverClass:'hovered',
                 drop:function(event, ui){
-                    cellSelf.updateCells(event,ui);
+                    cellSelf.game.updateCells(event,ui);
 
                 }
             });
 
         };
-        cellSelf.removeDrop = function(event, ui){
-            $('.highlight').droppable('destroy');
-            $('.highlight').removeClass('highlight');
-            //cellSelf.currentPiece.checked = false;
-            //console.log(cellSelf.currentPiece.checked);
-        };
+        //cellSelf.removeDrop = function(event, ui){
+        //    $('.highlight').droppable('destroy');
+        //    $('.highlight').removeClass('highlight');
+        //    //cellSelf.currentPiece.checked = false;
+        //    //console.log(cellSelf.currentPiece.checked);
+        //};
 
-        cellSelf.updateCells = function(event, ui){
-            for(var i = 0; i < highlightedCells.length; i++){
-                if (highlightedCells[i].cellElement){
-                    highlightedCells[i].addTarget();
-                }
-
-
-            }
-
-            cellSelf.game.dragTracker(ui.draggable[0]);
-            cellSelf.removeDrop();
-            $('.highlight').append(ui.draggable);
-            console.log($('.highlight'));
-        }
+    //    cellSelf.updateCells = function(event, ui){
+    //        console.log($(ui.draggable).attr('id'));
+    //        cellSelf.removeDrop();
+    //        $('.highlight').append(ui.draggable);
+    //        console.log($('.highlight'));
+    //    }
     };
 
-    var pieceGenerator = function(moveRule,game){
+    var pieceGenerator = function(moveRule,game,id){
         var pieceSelf = this;
         pieceSelf.checked = false;
+        pieceSelf.id = id;
         pieceSelf.pieceElement = null;
         pieceSelf.moveRule = moveRule;
         pieceSelf.game = game;
         pieceSelf.cellElement = null;
+        pieceSelf.cellElementRow = null;
+        pieceSelf.cellElementCol = null;
         pieceSelf.player = null;
         pieceSelf.setPlayer = function(player){
             pieceSelf.player = player;
         };
         pieceSelf.setCurrentCell = function(cell){
             pieceSelf.cellElement = cell;
+            pieceSelf.cellElementRow = cell.row;
+            pieceSelf.cellElementCol = cell.col;
         };
         pieceSelf.removeCurrentCell = function(){
             pieceSelf.cellElement = null;
+            pieceSelf.cellElementRow = null;
+            pieceSelf.cellElementCol = null;
+
         };
         pieceSelf.renderPiece = function(){
-            pieceSelf.pieceElement = $('<div>').addClass('piece');
+            pieceSelf.pieceElement = $('<div id="' + pieceSelf.id + '">').addClass('piece');
             return pieceSelf.pieceElement;
         };
         pieceSelf.drag = function(){
@@ -249,8 +298,10 @@ var gameController = function (element){
                 containment:'#board',
                 revert:"invalid",
                 tolerance:'fit',
-                start:pieceSelf.cellElement.findPossibleMoves,
-                stop:pieceSelf.cellElement.removeDrop
+                start:function(){
+                    pieceSelf.cellElement.findPossibleMoves();
+                },
+                stop:pieceSelf.game.removeDrop
                 //helper:pieceSelf.help
             });
         };
