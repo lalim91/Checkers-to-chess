@@ -17,8 +17,12 @@ var gameController = function (element){
     self.currentlyDraggingPiece = null;
     self.oldCell = null;
     self.newCell = null;
+    self.height = null;
+    self.width = null;
 
     self.createBoard = function(height,width){
+        self.height = height;
+        self.width = width;
         var colors = ['black','white'];
         var colorIndex = 0;
         for (var i = 0; i < height; i++){
@@ -135,6 +139,10 @@ var gameController = function (element){
         self.newCell = null;
     };
     self.updateCells = function(event, ui){
+        //call method in piece to delete it's dom element
+        //call method in piece's cell to set cell's piece to null
+        //call method in game to remove piece from active list
+        //call method in all remaining highlighted cells to clear their kill lists
         self.refresh();
         console.log('ui draggable: ',$(ui.draggable).attr('id'));
         var id = $(ui.draggable).attr('id');
@@ -158,6 +166,16 @@ var gameController = function (element){
 
 
     };
+    self.get_cell_at_position= function(x,y){
+        return cellPosition[x][y];
+    }
+    self.is_position_in_bounds= function(x,y){
+        if((x>=0 && x<self.width) && (y>=0 && y<self.height)){
+            return true;
+        } else{
+            return false;
+        }
+    }
     var cellGenerator = function(color, position,game){
         var cellSelf = this;
         cellSelf.color = color;
@@ -209,25 +227,33 @@ var gameController = function (element){
         };
         cellSelf.findPossibleMoves = function(event, ui){
             highlightedCells = [];
-            //cellSelf.game.refresh();
-            console.log('current piece', cellSelf.currentPiece);
-            console.log("My move rule: ",
-            cellSelf.currentPiece.moveRule(cellSelf.position.x,cellSelf.position.y));
+            ////cellSelf.game.refresh();
+            //console.log('current piece', cellSelf.currentPiece);
+            //console.log("My move rule: ",
+            //cellSelf.currentPiece.moveRule(cellSelf.position.x,cellSelf.position.y));
             cellSelf.moves = cellSelf.currentPiece.moveRule(cellSelf.position.x,cellSelf.position.y);
             cellSelf.checkCellForPiece();
             cellSelf.highlightPossibleMoves();
             cellSelf.drop();
 
         };
+        cellSelf.mark_pieces_for_death=function(pieces){
+            cellSelf.death_list=pieces;
+        }
         cellSelf.checkCellForPiece = function(){
             for (var i = 0; i < cellSelf.moves.length; i++){
                 console.log(cellSelf.moves[i]);
-                if (cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y].currentPiece == null){
-                    highlightedCells.push(cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y]);
-                }else if(cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y].currentPiece.player != cellSelf.currentPiece.player){
-                    console.log('not match');
-                }
+                //if (cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y].currentPiece == null){
+                //    highlightedCells.push(cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y]);
+                //}else if(cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y].currentPiece.player != cellSelf.currentPiece.player){
+                //    console.log('not match');
+                //}
+                var highlight_cell = cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y];
+                //mark cell at position for death
+                highlight_cell.mark_pieces_for_death(cellSelf.moves[i].pieces_to_kill);
+                highlightedCells.push(highlight_cell);
             }
+
             return highlightedCells;
         };
         cellSelf.highlightPossibleMoves = function(){
@@ -375,14 +401,35 @@ var pieceData = [
                 for (var j = 1; j < vectors[i].length; j++) {
                     var possibleCoor = {
                         x: x + (vectors[i][0] * j),
-                        y: y + (vectors[i][1] * j)
+                        y: y + (vectors[i][1] * j),
+                        vector: vectors[i],
+                        pieces_to_kill : []
                     };
                     totalPossible.push(possibleCoor);
-                    if (totalPossible[i].x < 8 && totalPossible[i].x >= 0 && totalPossible[i].y < 8 && totalPossible[i].y >= 0) {
-                        validPossible.push(totalPossible[i]);
+                    if (this.game.is_position_in_bounds(totalPossible[i].x,totalPossible[i].y)) {
+                        //is their a piece at that position?  AND is the color of the piece different than mine
+                        if (this.game.get_cell_at_position(totalPossible[i].x, totalPossible[i].y).currentPiece != null && this.game.get_cell_at_position(totalPossible[i].x, totalPossible[i].y).currentPiece.player != this.player){
+                            //if yes:
+                            //temporarily store the piece that will be jumped over
+                            //store piece to kill in pieces_to_kill array
+                            possibleCoor.pieces_to_kill.push(this.game.get_cell_at_position(totalPossible[i].x, totalPossible[i].y).currentPiece);
+                            //update totalPossible to one more cell along the same vector
+                            totalPossible[i].x += totalPossible[i].vector[0];
+                            totalPossible[i].y += totalPossible[i].vector[1];
+                            if (this.game.is_position_in_bounds(totalPossible[i].x,totalPossible[i].y) && this.game.get_cell_at_position(totalPossible[i].x, totalPossible[i].y).currentPiece == null){
+                                validPossible.push(totalPossible[i]);
+                            }
+
+                            //check if that cell is emptytotalPossible
+                            //if yes, it is a valid move
+                        }else if (this.game.get_cell_at_position(totalPossible[i].x, totalPossible[i].y).currentPiece == null){
+                            validPossible.push(totalPossible[i]);
+                        }
+
                     }
                 }
             }
+
             return validPossible;
         }
     }
