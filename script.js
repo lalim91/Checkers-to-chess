@@ -93,6 +93,14 @@ var gameController = function (element){
             }
         }
     };
+    self.initializeTurn = function(){
+        if (currentPlayer == 0){
+            //turn = players[0];
+            players[1].disablePieces(player2Pieces);
+            currentPlayer = 1;
+        }
+     };
+
     self.setTurns = function(){
         if (currentPlayer == 0){
             //turn = players[0];
@@ -113,6 +121,7 @@ var gameController = function (element){
                 //console.log('current dragged piece: ',self.currentlyDraggingPiece);
             }
         }
+        console.log(pieces);
         self.oldCell = self.currentlyDraggingPiece.cellElement;
         self.oldCell.removeCurrentPiece();
         self.currentlyDraggingPiece.removeCurrentCell();
@@ -127,6 +136,26 @@ var gameController = function (element){
         }
 
     };
+    self.removePieceFromArray = function(deathList){
+        for(var i = 0; i < deathList.length; i++){
+            var pieceIndex = pieces.indexOf(deathList[i]);
+            var player1Index = player1Pieces.indexOf(deathList[i].pieceElement);
+            var player2Index = player2Pieces.indexOf(deathList[i].pieceElement);
+            pieces.splice(pieceIndex,1);
+            if(player1Index != -1){
+                player1Pieces.splice(player1Index,1);
+            }
+            if (player2Index != -1){
+                player2Pieces.splice(player2Index,1);
+            }
+        }
+
+    };
+    self.deleteDeathList = function(){
+      for (var i = 0; i < cells.length; i++){
+          cells[i].death_list = [];
+      }
+    };
     self.removeDrop = function(event, ui){
         $('.highlight').droppable('destroy');
         $('.highlight').removeClass('highlight');
@@ -138,11 +167,13 @@ var gameController = function (element){
         self.oldCell = null;
         self.newCell = null;
     };
+
     self.updateCells = function(event, ui){
         //call method in piece to delete it's dom element
         //call method in piece's cell to set cell's piece to null
         //call method in game to remove piece from active list
         //call method in all remaining highlighted cells to clear their kill lists
+
         self.refresh();
         console.log('ui draggable: ',$(ui.draggable).attr('id'));
         var id = $(ui.draggable).attr('id');
@@ -157,6 +188,7 @@ var gameController = function (element){
         self.currentlyDraggingPiece.setCurrentCell(self.newCell);
         $(self.newCell.cellElement).append(ui.draggable);
         $('#draggableHelper').remove();
+        self.newCell.executeDeath();
         console.log('current dragged piece: ',self.currentlyDraggingPiece);
         console.log('oldCell: ',self.oldCell);
         console.log('newCell: ',self.newCell);
@@ -166,16 +198,16 @@ var gameController = function (element){
 
 
     };
-    self.get_cell_at_position= function(x,y){
+    self.getCellAtPosition = function(x,y){
         return cellPosition[x][y];
-    }
-    self.is_position_in_bounds= function(x,y){
+    };
+    self.isPositionInBounds = function(x,y){
         if((x>=0 && x<self.width) && (y>=0 && y<self.height)){
             return true;
         } else{
             return false;
         }
-    }
+    };
     var cellGenerator = function(color, position,game){
         var cellSelf = this;
         cellSelf.color = color;
@@ -227,33 +259,32 @@ var gameController = function (element){
         };
         cellSelf.findPossibleMoves = function(event, ui){
             highlightedCells = [];
-            ////cellSelf.game.refresh();
-            //console.log('current piece', cellSelf.currentPiece);
-            //console.log("My move rule: ",
-            //cellSelf.currentPiece.moveRule(cellSelf.position.x,cellSelf.position.y));
             cellSelf.moves = cellSelf.currentPiece.moveRule(cellSelf.position.x,cellSelf.position.y);
-            cellSelf.checkCellForPiece();
+            cellSelf.convertMovesToCells();
             cellSelf.highlightPossibleMoves();
             cellSelf.drop();
 
         };
-        cellSelf.mark_pieces_for_death=function(pieces){
-            cellSelf.death_list=pieces;
-        }
-        cellSelf.checkCellForPiece = function(){
+        cellSelf.markPiecesForDeath = function(piecesToKill){
+            cellSelf.death_list=piecesToKill;
+        };
+        cellSelf.executeDeath = function (){
+            for (var i = 0; i < cellSelf.death_list.length; i++){
+              cellSelf.death_list[i].cellElement.removeCurrentPiece();
+              cellSelf.death_list[i].removeCurrentCell();
+              cellSelf.death_list[i].deleteSelf();
+            }
+            cellSelf.game.removePieceFromArray(cellSelf.death_list);
+            cellSelf.game.deleteDeathList();
+        };
+        cellSelf.convertMovesToCells = function(){
             for (var i = 0; i < cellSelf.moves.length; i++){
                 console.log(cellSelf.moves[i]);
-                //if (cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y].currentPiece == null){
-                //    highlightedCells.push(cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y]);
-                //}else if(cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y].currentPiece.player != cellSelf.currentPiece.player){
-                //    console.log('not match');
-                //}
-                var highlight_cell = cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y];
+                var highlightCell = cellPosition[cellSelf.moves[i].x][cellSelf.moves[i].y];
                 //mark cell at position for death
-                highlight_cell.mark_pieces_for_death(cellSelf.moves[i].pieces_to_kill);
-                highlightedCells.push(highlight_cell);
+                highlightCell.markPiecesForDeath(cellSelf.moves[i].pieces_to_kill);
+                highlightedCells.push(highlightCell);
             }
-
             return highlightedCells;
         };
         cellSelf.highlightPossibleMoves = function(){
@@ -291,6 +322,9 @@ var gameController = function (element){
         pieceSelf.cellElementRow = null;
         pieceSelf.cellElementCol = null;
         pieceSelf.player = null;
+        pieceSelf.deleteSelf = function(){
+            pieceSelf.pieceElement.remove();
+        };
         pieceSelf.setPlayer = function(player){
             pieceSelf.player = player;
         };
@@ -335,11 +369,13 @@ var gameController = function (element){
             return playSelf.color;
         };
         playSelf.disablePieces = function(piecesArray){
+            console.log(piecesArray);
             for (var i = 0; i < piecesArray.length; i++){
                 piecesArray[i].draggable('disable');
             }
         };
         playSelf.enablePieces = function(piecesArray){
+            console.log(piecesArray);
             for (var i = 0; i < piecesArray.length; i++){
                 piecesArray[i].draggable('enable');
             }
@@ -369,14 +405,35 @@ var pieceData = [
                 for (var j = 1; j < vectors[i].length; j++) {
                     var possibleCoor = {
                         x: x + (vectors[i][0] * j),
-                        y: y + (vectors[i][1] * j)
+                        y: y + (vectors[i][1] * j),
+                        vector: vectors[i],
+                        pieces_to_kill : []
                     };
                     totalPossible.push(possibleCoor);
-                    if (totalPossible[i].x < 8 && totalPossible[i].x >= 0 && totalPossible[i].y < 8 && totalPossible[i].y >= 0) {
-                        validPossible.push(totalPossible[i]);
+                    if (this.game.isPositionInBounds(totalPossible[i].x,totalPossible[i].y)) {
+                        //is their a piece at that position?  AND is the color of the piece different than mine
+                        if (this.game.getCellAtPosition(totalPossible[i].x, totalPossible[i].y).currentPiece != null && this.game.getCellAtPosition(totalPossible[i].x, totalPossible[i].y).currentPiece.player != this.player){
+                            //if yes:
+                            //temporarily store the piece that will be jumped over
+                            //store piece to kill in pieces_to_kill array
+                            possibleCoor.pieces_to_kill.push(this.game.getCellAtPosition(totalPossible[i].x, totalPossible[i].y).currentPiece);
+                            //update totalPossible to one more cell along the same vector
+                            totalPossible[i].x += totalPossible[i].vector[0];
+                            totalPossible[i].y += totalPossible[i].vector[1];
+                            if (this.game.isPositionInBounds(totalPossible[i].x,totalPossible[i].y) && this.game.getCellAtPosition(totalPossible[i].x, totalPossible[i].y).currentPiece == null){
+                                validPossible.push(totalPossible[i]);
+                            }
+
+                            //check if that cell is empty totalPossible
+                            //if yes, it is a valid move
+                        }else if (this.game.getCellAtPosition(totalPossible[i].x, totalPossible[i].y).currentPiece == null){
+                            validPossible.push(totalPossible[i]);
+                        }
+
                     }
                 }
             }
+
             return validPossible;
         }
     },
@@ -406,23 +463,24 @@ var pieceData = [
                         pieces_to_kill : []
                     };
                     totalPossible.push(possibleCoor);
-                    if (this.game.is_position_in_bounds(totalPossible[i].x,totalPossible[i].y)) {
+                    if (this.game.isPositionInBounds(totalPossible[i].x,totalPossible[i].y)) {
                         //is their a piece at that position?  AND is the color of the piece different than mine
-                        if (this.game.get_cell_at_position(totalPossible[i].x, totalPossible[i].y).currentPiece != null && this.game.get_cell_at_position(totalPossible[i].x, totalPossible[i].y).currentPiece.player != this.player){
+                        if (this.game.getCellAtPosition(totalPossible[i].x, totalPossible[i].y).currentPiece != null && this.game.getCellAtPosition(totalPossible[i].x, totalPossible[i].y).currentPiece.player != this.player){
                             //if yes:
                             //temporarily store the piece that will be jumped over
                             //store piece to kill in pieces_to_kill array
-                            possibleCoor.pieces_to_kill.push(this.game.get_cell_at_position(totalPossible[i].x, totalPossible[i].y).currentPiece);
+                            possibleCoor.pieces_to_kill.push(this.game.getCellAtPosition(totalPossible[i].x, totalPossible[i].y).currentPiece);
                             //update totalPossible to one more cell along the same vector
                             totalPossible[i].x += totalPossible[i].vector[0];
                             totalPossible[i].y += totalPossible[i].vector[1];
-                            if (this.game.is_position_in_bounds(totalPossible[i].x,totalPossible[i].y) && this.game.get_cell_at_position(totalPossible[i].x, totalPossible[i].y).currentPiece == null){
+                            if (this.game.isPositionInBounds(totalPossible[i].x,totalPossible[i].y) && this.game.getCellAtPosition(totalPossible[i].x, totalPossible[i].y).currentPiece == null){
+
                                 validPossible.push(totalPossible[i]);
                             }
 
-                            //check if that cell is emptytotalPossible
+                            //check if that cell is empty totalPossible
                             //if yes, it is a valid move
-                        }else if (this.game.get_cell_at_position(totalPossible[i].x, totalPossible[i].y).currentPiece == null){
+                        }else if (this.game.getCellAtPosition(totalPossible[i].x, totalPossible[i].y).currentPiece == null){
                             validPossible.push(totalPossible[i]);
                         }
 
@@ -441,6 +499,6 @@ $(document).ready(function(){
     game.createBoard(8,8);
     game.initialPlayer(['yellow','blue']);
     game.createPiece(pieceData);
-    game.setTurns();
+    game.initializeTurn();
 });
 
