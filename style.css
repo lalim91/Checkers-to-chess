@@ -5,6 +5,7 @@
     height: 6vw;
     width: 8vw;
     border: 1px solid black;
+    padding-top:0;
 }
 .piece {
     height: 6vw;
@@ -14,6 +15,15 @@
     margin:auto;
     position: relative;
     /*background-color: yellow;*/
+}
+img{
+    height: 4vw;
+    width: 5vw;
+    top: 15%;
+    left: 6%;
+    position: relative;
+    color:lightgrey;
+    display:block;
 }
 .black{
     background-color: black;
