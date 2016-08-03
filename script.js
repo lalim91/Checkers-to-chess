@@ -345,6 +345,7 @@ var gameController = function (element){
         pieceSelf.cellElementRow = null;
         pieceSelf.cellElementCol = null;
         pieceSelf.player = null;
+        pieceSelf.king = false;
         pieceSelf.deleteSelf = function(){
             pieceSelf.pieceElement.remove();
             pieceSelf.game.check = true;
@@ -366,7 +367,11 @@ var gameController = function (element){
         pieceSelf.setKingMovement = function(){
             pieceSelf.moveRule = pieceData[2].movementRules;
             pieceSelf.jumps = pieceData[2].jumpCheck;
-            pieceSelf.pieceElement.append('<img src="crown.png">')
+            if (pieceSelf.king == false){
+                pieceSelf.pieceElement.append('<img src="crown.png">');
+                pieceSelf.king = true;
+            }
+
         };
         pieceSelf.renderPiece = function(){
             pieceSelf.pieceElement = $('<div id="' + pieceSelf.id + '">').addClass('piece');

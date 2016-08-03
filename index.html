@@ -23,6 +23,44 @@
     <link href="style.css" type="text/css" rel="stylesheet"/>
 </head>
 <body>
+    <div class="container">
+        <h2>Checkers</h2>
+        <!-- Trigger the modal with a button -->
+        <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal">Rules</button>
+
+        <!-- Modal -->
+        <div class="modal fade" id="myModal" role="dialog">
+            <div class="modal-dialog">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Rules</h4>
+                    </div>
+                    <div class="modal-body">
+                        <ol>
+                            <li>Checkers is played by two players. Each player begins the game with 12 colored discs. </li>
+                            <li>Yellow moves first. Players then alternate moves.</li>
+                            <li>Moves are allowed only on the dark squares, so pieces always move diagonally. Single pieces are always limited to forward moves (toward the opponent).</li>
+                            <li>A piece making a non-capturing move (not involving a jump) may move only one square.</li>
+                            <li>A piece making a capturing move (a jump) leaps over one of the opponent's pieces, landing in a straight diagonal line on the other side. Only one piece may be captured in a single jump; however, that player must continue to capture all pieces until there are no more options.</li>
+                            <li>When a piece is captured, it is removed from the board.</li>
+                            <li>When a piece reaches the furthest row from the player who controls that piece, it is crowned and becomes a king.</li>
+                            <li>Kings are limited to moving diagonally, but may move both forward and backward. (Remember that single pieces, i.e. non-kings, are always limited to forward moves.)</li>
+                            <li>Kings may combine jumps in several directions -- forward and backward -- on the same turn. Single pieces may shift direction diagonally during a multiple capture turn, but must always jump forward (toward the opponent).</li>
+                            <li>A player wins the game when the opponent cannot make a move. </li>
+                        </ol>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
     <div id="board" class="col-xs-offset-2 col-xs-8"></div>
 </body>
 </html>
