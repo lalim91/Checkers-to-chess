@@ -1,5 +1,6 @@
 #board{
     height:100vh;
+    top:8vh;
 }
 .cell{
     height: 6vw;
@@ -39,5 +40,5 @@ img{
 }
 #draggableHelper {
     opacity: .7;
-    background: orange;
+    background: orchid;
 }
